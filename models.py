@@ -29,6 +29,13 @@ class City(db.Model):
         nullable=False,
     )
 
+    @classmethod
+    def city_choices(cls):
+        """Return [(city.code, city.name), ...] to use as choices in form"""
+
+        cities = cls.query.order_by("name").all()
+        return [(city.code, city.name) for city in cities]
+
 
 class Cafe(db.Model):
     """Cafe information."""
