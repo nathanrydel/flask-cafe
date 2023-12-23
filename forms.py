@@ -104,3 +104,16 @@ class UserEditForm(FlaskForm):
         "Image URL (Optional)",
         validators=[Optional()]
     )
+
+class UserLoginForm(FlaskForm):
+    """Login Form"""
+
+    username = StringField(
+        "Username",
+        validators=[InputRequired()]
+    )
+
+    password = PasswordField(
+        "Password",
+        validators=[InputRequired()]
+    )
