@@ -73,6 +73,6 @@ class UserSignupForm(FlaskForm):
     )
 
     image_url = URLField(
-        "Image URL",
+        "Image URL (Optional)",
         validators=[Optional()]
     )
