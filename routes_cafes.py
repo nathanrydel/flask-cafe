@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, redirect, flash, g
+from flask import Blueprint, render_template, redirect, flash, g, url_for
 
-from forms import AddCafeForm
+from forms import CafeAddEditForm
 from models import City, Cafe, db
 
 bp = Blueprint("cafes", __name__)
@@ -36,11 +36,11 @@ def cafe_detail(cafe_id):
 def cafe_add():
     """Show add form / handle adding of cafe"""
 
-    if not g.user:
-        flash("You must be signed in to add a cafe")
-        return redirect("/login")
+    # if not g.user:
+    #     flash("You must be signed in to add a cafe")
+    #     return redirect("/login")
 
-    form = AddCafeForm()
+    form = CafeAddEditForm()
     form.city_code.choices = City.city_choices()
 
     if form.validate_on_submit():
@@ -57,7 +57,33 @@ def cafe_add():
         db.session.commit()
 
         flash(f"{cafe.name} added.", "success")
-        return redirect(f"cafes/{cafe.id}")
+        return redirect(url_for("cafes.cafe_detail", cafe_id=cafe.id))
 
     else:
         return render_template("/cafe/add-form.html", form=form)
+
+
+@bp.route("/cafes/<int:cafe_id>/edit", methods=["GET", "POST"])
+def cafe_edit(cafe_id):
+    """Show edit form / handle editing of cafe"""
+
+    cafe = Cafe.query.get_or_404(cafe_id)
+
+    form = CafeAddEditForm(obj=cafe)
+    form.city_code.choices = City.city_choices()
+
+    if form.validate_on_submit():
+        cafe.name = form.name.data
+        cafe.description = form.description.data
+        cafe.url = form.url.data
+        cafe.address = form.address.data
+        cafe.city_code = form.city_code.data
+        cafe.image_url = form.image_url.data
+
+        db.session.commit()
+
+        flash(f"{cafe.name} edited.", "success")
+        return redirect(url_for("cafes.cafe_detail", cafe_id=cafe.id))
+
+    else:
+        return render_template("cafe/edit-form.html", cafe=cafe, form=form)
