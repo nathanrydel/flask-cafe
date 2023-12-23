@@ -5,8 +5,8 @@ from wtforms import StringField, TextAreaField, URLField, SelectField, PasswordF
 from wtforms.validators import InputRequired, Optional, Email
 
 
-class AddCafeForm(FlaskForm):
-    """Form for adding a cafe"""
+class CafeAddEditForm(FlaskForm):
+    """Form for adding/editing a cafe"""
 
     name = StringField("Name", validators=[InputRequired()])
     description = TextAreaField("Description", validators=[Optional()])
