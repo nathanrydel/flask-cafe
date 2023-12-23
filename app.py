@@ -5,10 +5,10 @@ import os
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
 
-import routes_auth
+# import routes_auth
 import routes_cafes
 import routes_home
-import routes_users
+# import routes_users
 
 from models import connect_db, bcrypt
 
@@ -30,7 +30,7 @@ def create_app(**config):
     connect_db(app)
     bcrypt.init_app(app)
 
-    app.register_blueprint(routes_auth.bp)
+    # app.register_blueprint(routes_auth.bp)
     app.register_blueprint(routes_cafes.bp)
     app.register_blueprint(routes_home.bp)
     # app.register_blueprint(routes_users.bp)
