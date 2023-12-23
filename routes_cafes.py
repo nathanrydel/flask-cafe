@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, flash, g, url_for
+from flask import Blueprint, render_template, redirect, flash, url_for #, g
 
 from forms import CafeAddEditForm
 from models import City, Cafe, db
@@ -66,6 +66,10 @@ def cafe_add():
 @bp.route("/cafes/<int:cafe_id>/edit", methods=["GET", "POST"])
 def cafe_edit(cafe_id):
     """Show edit form / handle editing of cafe"""
+
+    # if not g.user:
+    #     flash("You must be signed in to add a cafe")
+    #     return redirect("/login")
 
     cafe = Cafe.query.get_or_404(cafe_id)
 
