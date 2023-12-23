@@ -32,7 +32,7 @@ def cafe_detail(cafe_id):
         cafe=cafe,
     )
 
-@bp.routes("/cafes/add", methods=["GET", "POST"])
+@bp.route("/cafes/add", methods=["GET", "POST"])
 def cafe_add():
     """Show add form / handle adding of cafe"""
 
