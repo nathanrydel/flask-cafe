@@ -12,7 +12,7 @@ db = SQLAlchemy()
 class City(db.Model):
     """Cities for cafes."""
 
-    __tablename__ = 'cities'
+    __tablename__ = "cities"
 
     code = db.Column(
         db.Text,
@@ -40,7 +40,7 @@ class City(db.Model):
 class Cafe(db.Model):
     """Cafe information."""
 
-    __tablename__ = 'cafes'
+    __tablename__ = "cafes"
 
     id = db.Column(
         db.Integer,
@@ -69,7 +69,7 @@ class Cafe(db.Model):
 
     city_code = db.Column(
         db.Text,
-        db.ForeignKey('cities.code'),
+        db.ForeignKey("cities.code"),
         nullable=False,
     )
 
@@ -79,16 +79,16 @@ class Cafe(db.Model):
         default="/static/images/default-cafe.jpg",
     )
 
-    city = db.relationship("City", backref='cafes')
+    city = db.relationship("City", backref="cafes")
 
     def __repr__(self):
-        return f'<Cafe id={self.id} name="{self.name}">'
+        return f"<Cafe id={self.id} name='{self.name}'>"
 
     def get_city_state(self):
-        """Return 'city, state' for cafe."""
+        """Return "city, state" for cafe."""
 
         city = self.city
-        return f'{city.name}, {city.state}'
+        return f"{city.name}, {city.state}"
 
 
 def connect_db(app):
