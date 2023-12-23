@@ -1,25 +1,28 @@
 """Tests for Flask Cafe."""
-
-
 import os
-
 os.environ["DATABASE_URL"] = "postgresql:///flaskcafe_test"
 
-# import re
+import re
 from unittest import TestCase
 
 # from flask import session
-from app import app  # , CURR_USER_KEY
-from models import db, Cafe, City, connect_db  # , User, Like
+from app import create_app
+from config import CURR_USER_KEY
+from models import db, Cafe, City # connect_db, User, Like
+
 
 # Make Flask errors be real errors, rather than HTML pages with error info
-app.config['TESTING'] = True
-
 # This is a bit of hack, but don't use Flask DebugToolbar
-app.config['DEBUG_TB_HOSTS'] = ['dont-show-debug-toolbar']
-
 # Don't req CSRF for testing
-app.config['WTF_CSRF_ENABLED'] = False
+app = create_app(
+    SQLALCHEMY_DATABASE_URI="postgresql:///flaskcafe_test",
+    SQLALCHEMY_ECHO=False,
+    TESTING=True,
+    DEBUG_TB_HOSTS=['dont-show-debug-toolbar'],
+    WTF_CSRF_ENABLED=False
+)
+
+
 
 db.drop_all()
 db.create_all()
@@ -37,11 +40,11 @@ def debug_html(response, label="DEBUGGING"):  # pragma: no cover
     print("\n\n")
 
 
-# def login_for_test(client, user_id):
-#     """Log in this user."""
+def login_for_test(client, user_id):
+    """Log in this user."""
 
-#     with client.session_transaction() as sess:
-#         sess[CURR_USER_KEY] = user_id
+    with client.session_transaction() as sess:
+        sess[CURR_USER_KEY] = user_id
 
 
 #######################################
@@ -63,51 +66,51 @@ CAFE_DATA = dict(
     image_url="http://testcafeimg.com/"
 )
 
-# CAFE_DATA_EDIT = dict(
-#     name="new-name",
-#     description="new-description",
-#     url="http://new-image.com/",
-#     address="500 Sansome St",
-#     city_code="sf",
-#     image_url="http://new-image.com/"
-# )
+CAFE_DATA_EDIT = dict(
+    name="new-name",
+    description="new-description",
+    url="http://new-image.com/",
+    address="500 Sansome St",
+    city_code="sf",
+    image_url="http://new-image.com/"
+)
 
-# TEST_USER_DATA = dict(
-#     username="test",
-#     first_name="Testy",
-#     last_name="MacTest",
-#     description="Test Description.",
-#     email="test@test.com",
-#     password="secret",
-# )
+TEST_USER_DATA = dict(
+    username="test",
+    first_name="Testy",
+    last_name="MacTest",
+    description="Test Description.",
+    email="test@test.com",
+    password="secret",
+)
 
-# TEST_USER_DATA_EDIT = dict(
-#     first_name="new-fn",
-#     last_name="new-ln",
-#     description="new-description",
-#     email="new-email@test.com",
-#     image_url="http://new-image.com",
-# )
+TEST_USER_DATA_EDIT = dict(
+    first_name="new-fn",
+    last_name="new-ln",
+    description="new-description",
+    email="new-email@test.com",
+    image_url="http://new-image.com",
+)
 
-# TEST_USER_DATA_NEW = dict(
-#     username="new-username",
-#     first_name="new-fn",
-#     last_name="new-ln",
-#     description="new-description",
-#     password="secret",
-#     email="new-email@test.com",
-#     image_url="http://new-image.com",
-# )
+TEST_USER_DATA_NEW = dict(
+    username="new-username",
+    first_name="new-fn",
+    last_name="new-ln",
+    description="new-description",
+    password="secret",
+    email="new-email@test.com",
+    image_url="http://new-image.com",
+)
 
-# ADMIN_USER_DATA = dict(
-#     username="admin",
-#     first_name="Addie",
-#     last_name="MacAdmin",
-#     description="Admin Description.",
-#     email="admin@test.com",
-#     password="secret",
-#     admin=True,
-# )
+ADMIN_USER_DATA = dict(
+    username="admin",
+    first_name="Addie",
+    last_name="MacAdmin",
+    description="Admin Description.",
+    email="admin@test.com",
+    password="secret",
+    admin=True,
+)
 
 
 #######################################
@@ -231,78 +234,78 @@ class CafeViewsTestCase(TestCase):
             self.assertIn(b'testcafe.com', resp.data)
 
 
-# class CafeAdminViewsTestCase(TestCase):
-#     """Tests for add/edit views on cafes."""
+class CafeAdminViewsTestCase(TestCase):
+    """Tests for add/edit views on cafes."""
 
-#     def setUp(self):
-#         """Before each test, add sample city, users, and cafes"""
+    def setUp(self):
+        """Before each test, add sample city, users, and cafes"""
 
-#         City.query.delete()
-#         Cafe.query.delete()
+        City.query.delete()
+        Cafe.query.delete()
 
-#         sf = City(**CITY_DATA)
-#         db.session.add(sf)
+        sf = City(**CITY_DATA)
+        db.session.add(sf)
 
-#         cafe = Cafe(**CAFE_DATA)
-#         db.session.add(cafe)
+        cafe = Cafe(**CAFE_DATA)
+        db.session.add(cafe)
 
-#         db.session.commit()
+        db.session.commit()
 
-#         self.cafe_id = cafe.id
+        self.cafe_id = cafe.id
 
-#     def tearDown(self):
-#         """After each test, delete the cities."""
+    def tearDown(self):
+        """After each test, delete the cities."""
 
-#         Cafe.query.delete()
-#         City.query.delete()
-#         db.session.commit()
+        Cafe.query.delete()
+        City.query.delete()
+        db.session.commit()
 
-#     def test_add(self):
-#         with app.test_client() as client:
-#             resp = client.get(f"/cafes/add")
-#             self.assertIn(b'Add Cafe', resp.data)
+    def test_add(self):
+        with app.test_client() as client:
+            resp = client.get(f"/cafes/add")
+            self.assertIn(b'Add Cafe', resp.data)
 
-#             resp = client.post(
-#                 f"/cafes/add",
-#                 data=CAFE_DATA_EDIT,
-#                 follow_redirects=True)
-#             self.assertIn(b'added', resp.data)
+            resp = client.post(
+                f"/cafes/add",
+                data=CAFE_DATA_EDIT,
+                follow_redirects=True)
+            self.assertIn(b'added', resp.data)
 
-#    def test_dynamic_cities_vocab(self):
-#        id = self.cafe_id
+    def test_dynamic_cities_vocab(self):
+        id = self.cafe_id
 
-#        # the following is a regular expression for the HTML for the drop-down
-#        # menu pattern we want to check for
-#        choices_pattern = re.compile(
-#            r'<select [^>]*name="city_code"[^>]*><option [^>]*value="sf">' +
-#            r'San Francisco</option></select>')
+        # the following is a regular expression for the HTML for the drop-down
+        # menu pattern we want to check for
+        choices_pattern = re.compile(
+            r'<select [^>]*name="city_code"[^>]*><option [^>]*value="sf">' +
+            r'San Francisco</option></select>')
 
-#        with app.test_client() as client:
-#            resp = client.get(f"/cafes/add")
-#            self.assertRegex(resp.data.decode('utf8'), choices_pattern)
+        with app.test_client() as client:
+            resp = client.get(f"/cafes/add")
+            self.assertRegex(resp.data.decode('utf8'), choices_pattern)
 
-#            resp = client.get(f"/cafes/{id}/edit")
-#            self.assertRegex(resp.data.decode('utf8'), choices_pattern)
+            resp = client.get(f"/cafes/{id}/edit")
+            self.assertRegex(resp.data.decode('utf8'), choices_pattern)
 
-#     def test_edit(self):
-#         id = self.cafe_id
+    def test_edit(self):
+        id = self.cafe_id
 
-#         with app.test_client() as client:
-#             resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
-#             self.assertIn(b'Edit Test Cafe', resp.data)
+        with app.test_client() as client:
+            resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
+            self.assertIn(b'Edit Test Cafe', resp.data)
 
-#             resp = client.post(
-#                 f"/cafes/{id}/edit",
-#                 data=CAFE_DATA_EDIT,
-#                 follow_redirects=True)
-#             self.assertIn(b'edited', resp.data)
+            resp = client.post(
+                f"/cafes/{id}/edit",
+                data=CAFE_DATA_EDIT,
+                follow_redirects=True)
+            self.assertIn(b'edited', resp.data)
 
-#    def test_edit_form_shows_curr_data(self):
-#        id = self.cafe_id
+    def test_edit_form_shows_curr_data(self):
+        id = self.cafe_id
 
-#        with app.test_client() as client:
-#            resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
-#            self.assertIn(b'Test description', resp.data)
+        with app.test_client() as client:
+            resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
+            self.assertIn(b'Test description', resp.data)
 
 
 #######################################
