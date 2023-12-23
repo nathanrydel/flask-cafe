@@ -76,3 +76,31 @@ class UserSignupForm(FlaskForm):
         "Image URL (Optional)",
         validators=[Optional()]
     )
+
+class UserEditForm(FlaskForm):
+    """Form to edit a user"""
+
+    first_name = StringField(
+        "First Name",
+        validators=[InputRequired(), Length(min=2)]
+    )
+
+    last_name = StringField(
+        "Last Name",
+        validators=[InputRequired(), Length(min=2)]
+    )
+
+    email = StringField(
+        "Email",
+        validators=[InputRequired(), Email()]
+    )
+
+    description = TextAreaField(
+        "Description",
+        validators=[InputRequired()]
+    )
+
+    image_url = URLField(
+        "Image URL (Optional)",
+        validators=[Optional()]
+    )
