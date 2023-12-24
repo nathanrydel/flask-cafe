@@ -29,6 +29,7 @@ def cafe_list_all():
     return render_template(
         "cafe/list.html",
         cafes=cafes,
+        can_add=g.user and g.user.admin
     )
 
 
@@ -38,18 +39,25 @@ def cafe_detail(cafe_id):
 
     cafe = Cafe.query.get_or_404(cafe_id)
 
+    if g.user:
+        liked = g.user in cafe.liking_users
+    else:
+        liked = None
+
     return render_template(
         "cafe/detail.html",
         cafe=cafe,
+        show_edit=g.user and g.user.admin,
+        liked=liked
     )
 
 @bp.route("/cafes/add", methods=["GET", "POST"])
 def cafe_add():
     """Show add form / handle adding of cafe"""
 
-    # if not g.user:
-    #     flash("You must be signed in to add a cafe")
-    #     return redirect("/login")
+    if not g.user and g.user.admin:
+        flash("Only admins can add cafes.", "danger")
+        return redirect("/login")
 
     form = CafeAddEditForm()
     form.city_code.choices = City.city_choices()
@@ -78,9 +86,9 @@ def cafe_add():
 def cafe_edit(cafe_id):
     """Show edit form / handle editing of cafe"""
 
-    # if not g.user:
-    #     flash("You must be signed in to add a cafe")
-    #     return redirect("/login")
+    if not g.user and g.user.admin:
+        flash("Only admins can edit cafes.", "danger")
+        return redirect("/login")
 
     cafe = Cafe.query.get_or_404(cafe_id)
 
