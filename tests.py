@@ -3,12 +3,13 @@ import os
 os.environ["DATABASE_URL"] = "postgresql:///flaskcafe_test"
 
 import re
-from unittest import TestCase
 
 from flask import session
-from app import create_app
+from unittest import TestCase
+
+from models import db, Cafe, City, User, Like, connect_db
 from config import CURR_USER_KEY
-from models import db, Cafe, City, connect_db, User #, Like
+from app import create_app
 
 
 # Make Flask errors be real errors, rather than HTML pages with error info
@@ -21,7 +22,6 @@ app = create_app(
     DEBUG_TB_HOSTS=['dont-show-debug-toolbar'],
     WTF_CSRF_ENABLED=False
 )
-
 
 
 db.drop_all()
@@ -214,7 +214,6 @@ class CafeViewsTestCase(TestCase):
         Cafe.query.delete()
         City.query.delete()
 
-
         sf = City(**CITY_DATA)
         db.session.add(sf)
 
@@ -397,7 +396,6 @@ class UserModelTestCase(TestCase):
         user = User.register(**TEST_USER_DATA)
         db.session.add(user)
         db.session.commit()
-
 
         self.user = user
 
@@ -608,93 +606,93 @@ class LikeModelTestCase(TestCase):
     """Tests for views on cafes."""
 
 
-# class LikeViewsTestCase(TestCase):
-#     """Tests for views on cafes."""
+class LikeViewsTestCase(TestCase):
+    """Tests for views on cafes."""
 
-#     def setUp(self):
-#         """Before each test, add sample city, users, and cafes"""
+    def setUp(self):
+        """Before each test, add sample city, users, and cafes"""
 
-#         Like.query.delete()
-#         Cafe.query.delete()
-#         City.query.delete()
-#         User.query.delete()
+        Like.query.delete()
+        Cafe.query.delete()
+        City.query.delete()
+        User.query.delete()
 
-#         sf = City(**CITY_DATA)
-#         db.session.add(sf)
+        sf = City(**CITY_DATA)
+        db.session.add(sf)
 
-#         user = User.register(**TEST_USER_DATA)
-#         db.session.add(user)
+        user = User.register(**TEST_USER_DATA)
+        db.session.add(user)
 
-#         cafe = Cafe(**CAFE_DATA)
-#         db.session.add(cafe)
+        cafe = Cafe(**CAFE_DATA)
+        db.session.add(cafe)
 
-#         db.session.commit()
+        db.session.commit()
 
-#         self.user_id = user.id
-#         self.cafe_id = cafe.id
+        self.user_id = user.id
+        self.cafe_id = cafe.id
 
-#     def tearDown(self):
-#         """After each test, delete the cities."""
+    def tearDown(self):
+        """After each test, delete the cities."""
 
-#         db.session.rollback()
+        db.session.rollback()
 
-#     def test_user_profile_no_likes(self):
-#         with app.test_client() as client:
-#             login_for_test(client, self.user_id)
+    def test_user_profile_no_likes(self):
+        with app.test_client() as client:
+            login_for_test(client, self.user_id)
 
-#             resp = client.get(f"/profile", follow_redirects=True)
-#             self.assertIn(b'have no liked cafes', resp.data)
+            resp = client.get(f"/profile", follow_redirects=True)
+            self.assertIn(b'have no liked cafes', resp.data)
 
-#     def test_user_profile_likes(self):
-#         like = Like(user_id=self.user_id, cafe_id=self.cafe_id)
-#         db.session.add(like)
-#         db.session.commit()
+    def test_user_profile_likes(self):
+        like = Like(user_id=self.user_id, cafe_id=self.cafe_id)
+        db.session.add(like)
+        db.session.commit()
 
-#         with app.test_client() as client:
-#             login_for_test(client, self.user_id)
+        with app.test_client() as client:
+            login_for_test(client, self.user_id)
 
-#             resp = client.get(f"/profile", follow_redirects=True)
-#             self.assertNotIn(b'have no liked cafes', resp.data)
-#             self.assertIn(b'Test Cafe', resp.data)
+            resp = client.get(f"/profile", follow_redirects=True)
+            self.assertNotIn(b'have no liked cafes', resp.data)
+            self.assertIn(b'Test Cafe', resp.data)
 
-#     def test_api_likes(self):
-#         like = Like(user_id=self.user_id, cafe_id=self.cafe_id)
-#         db.session.add(like)
-#         db.session.commit()
+    def test_api_likes(self):
+        like = Like(user_id=self.user_id, cafe_id=self.cafe_id)
+        db.session.add(like)
+        db.session.commit()
 
-#         with app.test_client() as client:
-#             resp = client.get(f"/api/likes?cafe_id={self.cafe_id}")
-#             self.assertEqual(resp.json, {"error": "Not logged in"})
+        with app.test_client() as client:
+            resp = client.get(f"/api/likes?cafe_id={self.cafe_id}")
+            self.assertEqual(resp.json, {"error": "Not logged in"})
 
-#             login_for_test(client, self.user_id)
+            login_for_test(client, self.user_id)
 
-#             resp = client.get(f"/api/likes?cafe_id={self.cafe_id}")
-#             self.assertEqual(resp.json, {"likes": True})
+            resp = client.get(f"/api/likes?cafe_id={self.cafe_id}")
+            self.assertEqual(resp.json, {"likes": True})
 
-#     def test_api_like(self):
-#         data = {"cafe_id": self.cafe_id}
+    def test_api_like(self):
+        data = {"cafe_id": self.cafe_id}
 
-#         with app.test_client() as client:
-#             resp = client.post(f"/api/like", json=data)
-#             self.assertEqual(resp.json, {"error": "Not logged in"})
+        with app.test_client() as client:
+            resp = client.post(f"/api/like", json=data)
+            self.assertEqual(resp.json, {"error": "Not logged in"})
 
-#             login_for_test(client, self.user_id)
+            login_for_test(client, self.user_id)
 
-#             resp = client.post(f"/api/like", json=data)
-#             self.assertEqual(resp.json, {"liked": self.cafe_id})
+            resp = client.post(f"/api/like", json=data)
+            self.assertEqual(resp.json, {"liked": self.cafe_id})
 
-#     def test_api_unlike(self):
-#         like = Like(user_id=self.user_id, cafe_id=self.cafe_id)
-#         db.session.add(like)
-#         db.session.commit()
+    def test_api_unlike(self):
+        like = Like(user_id=self.user_id, cafe_id=self.cafe_id)
+        db.session.add(like)
+        db.session.commit()
 
-#         data = {"cafe_id": self.cafe_id}
+        data = {"cafe_id": self.cafe_id}
 
-#         with app.test_client() as client:
-#             resp = client.post(f"/api/unlike", json=data)
-#             self.assertEqual(resp.json, {"error": "Not logged in"})
+        with app.test_client() as client:
+            resp = client.post(f"/api/unlike", json=data)
+            self.assertEqual(resp.json, {"error": "Not logged in"})
 
-#             login_for_test(client, self.user_id)
+            login_for_test(client, self.user_id)
 
-#             resp = client.post(f"/api/unlike", json=data)
-#             self.assertEqual(resp.json, {"unliked": self.cafe_id})
+            resp = client.post(f"/api/unlike", json=data)
+            self.assertEqual(resp.json, {"unliked": self.cafe_id})
