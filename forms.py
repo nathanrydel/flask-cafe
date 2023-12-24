@@ -44,7 +44,7 @@ class UserSignupForm(FlaskForm):
 
     username = StringField(
         "Username",
-        validators=[InputRequired(), Length(min=5, max=20)]
+        validators=[InputRequired(), Length(min=4, max=20)]
     )
 
     password = PasswordField(
