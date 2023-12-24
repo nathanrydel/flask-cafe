@@ -72,6 +72,9 @@ def signup():
         flash(f"Signup successful! You are logged in as {user.username}")
         return redirect("/cafes")
 
+    else:
+        return render_template("auth/signup-form.html", form=form)
+
 
 @bp.route("/login", methods=["GET", "POST"])
 def login():
