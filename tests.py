@@ -117,13 +117,23 @@ ADMIN_USER_DATA = dict(
 # homepage
 
 
-class HomepageViewsTestCase(TestCase):
+class HomepageViewTestCase(TestCase):
     """Tests about homepage."""
 
     def test_homepage(self):
         with app.test_client() as client:
             resp = client.get("/")
             self.assertIn(b'Where Coffee Dreams Come True', resp.data)
+
+
+# class NotFoundViewTestCase(TestCase):
+#     """Tests about 404 page."""
+
+#     def test_404(self):
+#         with app.test_client() as client:
+#             resp = client.get("/not-a-real-view-xyz")
+#             self.assertIn(b'Ut Oh', resp.data)
+#             self.assertEqual(resp.status_code, 404)
 
 
 #######################################
@@ -145,19 +155,21 @@ class CityModelTestCase(TestCase):
         cafe = Cafe(**CAFE_DATA)
         db.session.add(cafe)
 
+        db.session.flush()
+
         db.session.commit()
 
+        self.sf = sf
         self.cafe = cafe
 
     def tearDown(self):
         """After each test, remove all cafes."""
 
-        Cafe.query.delete()
-        City.query.delete()
-        db.session.commit()
+        db.session.rollback()
 
-    # depending on how you solve exercise, you may have things to test on
-    # the City model, so here's a good place to put that stuff.
+    def test_city_choices(self):
+        choices = City.city_choices()
+        self.assertEqual(choices, [('sf', 'San Francisco')])
 
 
 #######################################
@@ -186,9 +198,7 @@ class CafeModelTestCase(TestCase):
     def tearDown(self):
         """After each test, remove all cafes."""
 
-        Cafe.query.delete()
-        City.query.delete()
-        db.session.commit()
+        db.session.rollback()
 
     def test_get_city_state(self):
         self.assertEqual(self.cafe.get_city_state(), "San Francisco, CA")
@@ -200,14 +210,18 @@ class CafeViewsTestCase(TestCase):
     def setUp(self):
         """Before all tests, add sample city & users"""
 
+        User.query.delete()
         Cafe.query.delete()
         City.query.delete()
+
 
         sf = City(**CITY_DATA)
         db.session.add(sf)
 
         cafe = Cafe(**CAFE_DATA)
         db.session.add(cafe)
+
+        db.session.flush()
 
         db.session.commit()
 
@@ -216,9 +230,7 @@ class CafeViewsTestCase(TestCase):
     def tearDown(self):
         """After each test, remove all cafes."""
 
-        Cafe.query.delete()
-        City.query.delete()
-        db.session.commit()
+        db.session.rollback()
 
     def test_list(self):
         with app.test_client() as client:
@@ -240,28 +252,59 @@ class CafeAdminViewsTestCase(TestCase):
     def setUp(self):
         """Before each test, add sample city, users, and cafes"""
 
-        City.query.delete()
         Cafe.query.delete()
+        City.query.delete()
+        User.query.delete()
 
         sf = City(**CITY_DATA)
         db.session.add(sf)
+
+        user = User.register(**TEST_USER_DATA)
+        admin = User.register(**ADMIN_USER_DATA)
+        db.session.add_all([user, admin])
 
         cafe = Cafe(**CAFE_DATA)
         db.session.add(cafe)
 
         db.session.commit()
 
+        self.user_id = user.id
+        self.admin_id = admin.id
         self.cafe_id = cafe.id
 
     def tearDown(self):
         """After each test, delete the cities."""
 
-        Cafe.query.delete()
-        City.query.delete()
-        db.session.commit()
+        db.session.rollback()
 
-    def test_add(self):
+    def test_anon_add(self):
         with app.test_client() as client:
+            resp = client.get(f"/cafes/add", follow_redirects=True)
+            self.assertIn(b'Only admins can add cafes', resp.data)
+
+            resp = client.post(
+                f"/cafes/add",
+                data=CAFE_DATA_EDIT,
+                follow_redirects=True)
+            self.assertIn(b'Only admins can add cafes', resp.data)
+
+    def test_user_add(self):
+        with app.test_client() as client:
+            login_for_test(client, self.user_id)
+
+            resp = client.get(f"/cafes/add", follow_redirects=True)
+            self.assertIn(b'Only admins can add cafes', resp.data)
+
+            resp = client.post(
+                f"/cafes/add",
+                data=CAFE_DATA_EDIT,
+                follow_redirects=True)
+            self.assertIn(b'Only admins can add cafes', resp.data)
+
+    def test_admin_add(self):
+        with app.test_client() as client:
+            login_for_test(client, self.admin_id)
+
             resp = client.get(f"/cafes/add")
             self.assertIn(b'Add Cafe', resp.data)
 
@@ -281,16 +324,46 @@ class CafeAdminViewsTestCase(TestCase):
             r'San Francisco</option></select>')
 
         with app.test_client() as client:
+            login_for_test(client, self.admin_id)
+
             resp = client.get(f"/cafes/add")
             self.assertRegex(resp.data.decode('utf8'), choices_pattern)
 
             resp = client.get(f"/cafes/{id}/edit")
             self.assertRegex(resp.data.decode('utf8'), choices_pattern)
 
-    def test_edit(self):
+    def test_anon_edit(self):
         id = self.cafe_id
 
         with app.test_client() as client:
+            resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
+            self.assertIn(b'Only admins can edit cafes', resp.data)
+
+            resp = client.post(
+                f"/cafes/{id}/edit",
+                data=CAFE_DATA_EDIT,
+                follow_redirects=True)
+            self.assertIn(b'Only admins can edit cafes', resp.data)
+
+    def test_user_edit(self):
+        id = self.cafe_id
+
+        with app.test_client() as client:
+            login_for_test(client, self.user_id)
+            resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
+            self.assertIn(b'Only admins can edit cafes', resp.data)
+
+            resp = client.post(
+                f"/cafes/{id}/edit",
+                data=CAFE_DATA_EDIT,
+                follow_redirects=True)
+            self.assertIn(b'Only admins can edit cafes', resp.data)
+
+    def test_admin_edit(self):
+        id = self.cafe_id
+
+        with app.test_client() as client:
+            login_for_test(client, self.admin_id)
             resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
             self.assertIn(b'Edit Test Cafe', resp.data)
 
@@ -300,10 +373,11 @@ class CafeAdminViewsTestCase(TestCase):
                 follow_redirects=True)
             self.assertIn(b'edited', resp.data)
 
-    def test_edit_form_shows_curr_data(self):
+    def test_admin_edit_form_shows_curr_data(self):
         id = self.cafe_id
 
         with app.test_client() as client:
+            login_for_test(client, self.admin_id)
             resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
             self.assertIn(b'Test description', resp.data)
 
@@ -322,16 +396,15 @@ class UserModelTestCase(TestCase):
 
         user = User.register(**TEST_USER_DATA)
         db.session.add(user)
-
         db.session.commit()
+
 
         self.user = user
 
     def tearDown(self):
         """After each test, remove all users."""
 
-        User.query.delete()
-        db.session.commit()
+        db.session.rollback()
 
     def test_authenticate(self):
         rez = User.authenticate("test", "secret")
@@ -348,7 +421,7 @@ class UserModelTestCase(TestCase):
         self.assertEqual(self.user.get_full_name(), "Testy MacTest")
 
     def test_register(self):
-        u = User.register(**TEST_USER_DATA)
+        u = User.register(**TEST_USER_DATA_NEW)
         # test that password gets bcrypt-hashed (all start w/$2b$)
         self.assertEqual(u.hashed_password[:4], "$2b$")
         db.session.rollback()
@@ -372,8 +445,7 @@ class AuthViewsTestCase(TestCase):
     def tearDown(self):
         """After each test, remove all users."""
 
-        User.query.delete()
-        db.session.commit()
+        db.session.rollback()
 
     def test_signup(self):
         with app.test_client() as client:
@@ -452,8 +524,7 @@ class NavBarTestCase(TestCase):
     def tearDown(self):
         """After tests, remove all users."""
 
-        User.query.delete()
-        db.session.commit()
+        db.session.rollback()
 
     def test_anon_navbar(self):
         with app.test_client() as client:
@@ -462,7 +533,6 @@ class NavBarTestCase(TestCase):
             self.assertIn(b'Sign Up', resp.data)
             self.assertNotIn(b'/profile', resp.data)
             self.assertNotIn(b'Log Out', resp.data)
-
 
     def test_logged_in_navbar(self):
         with app.test_client() as client:
@@ -474,45 +544,157 @@ class NavBarTestCase(TestCase):
             self.assertIn(b'Log Out', resp.data)
 
 
-# class ProfileViewsTestCase(TestCase):
-#     """Tests for views on user profiles."""
+class ProfileViewsTestCase(TestCase):
+    """Tests for views on user profiles."""
 
-#     def setUp(self):
-#         """Before each test, add sample user."""
+    def setUp(self):
+        """Before each test, add sample user."""
 
-#         User.query.delete()
+        User.query.delete()
 
-#         user = User.register(**TEST_USER_DATA)
-#         db.session.add(user)
+        user = User.register(**TEST_USER_DATA)
+        db.session.add(user)
 
-#         db.session.commit()
+        db.session.commit()
 
-#         self.user_id = user.id
+        self.user_id = user.id
 
-#     def tearDown(self):
-#         """After each test, remove all users."""
+    def tearDown(self):
+        """After each test, remove all users."""
 
-#         User.query.delete()
-#         db.session.commit()
+        db.session.rollback()
 
-#     def test_anon_profile(self):
-#         self.fail("FIXME: write this test")
+    def test_anon_profile(self):
+        with app.test_client() as client:
+            resp = client.get("/profile", follow_redirects=True)
+            self.assertIn(b'not logged in', resp.data)
 
-#     def test_logged_in_profile(self):
-#         self.fail("FIXME: write this test")
+    def test_logged_in_profile(self):
+        with app.test_client() as client:
+            login_for_test(client, self.user_id)
+            resp = client.get("/profile")
+            self.assertIn(b'/profile/edit', resp.data)
 
-#     def test_anon_profile_edit(self):
-#         self.fail("FIXME: write this test")
+    def test_anon_profile_edit(self):
+        with app.test_client() as client:
+            resp = client.get("/profile/edit", follow_redirects=True)
+            self.assertIn(b'not logged in', resp.data)
 
-#     def test_logged_in_profile_edit(self):
-#         self.fail("FIXME: write this test")
+            resp = client.post("/profile/edit", follow_redirects=True)
+            self.assertIn(b'not logged in.', resp.data)
+
+    def test_logged_in_profile_edit(self):
+        with app.test_client() as client:
+            login_for_test(client, self.user_id)
+            resp = client.get("/profile/edit")
+            self.assertIn(b'Edit Profile', resp.data)
+
+            resp = client.post(
+                "/profile/edit",
+                data=TEST_USER_DATA_EDIT,
+                follow_redirects=True)
+
+            self.assertIn(b'new-fn new-ln', resp.data)
+            self.assertIn(b'new-description', resp.data)
+            self.assertIn(b'new-email', resp.data)
+            self.assertIn(b'new-image', resp.data)
 
 
 #######################################
 # likes
 
 
-class LikeViewsTestCase(TestCase):
+class LikeModelTestCase(TestCase):
     """Tests for views on cafes."""
 
-    # FIXME: add setup/teardown/inidividual tests
+
+# class LikeViewsTestCase(TestCase):
+#     """Tests for views on cafes."""
+
+#     def setUp(self):
+#         """Before each test, add sample city, users, and cafes"""
+
+#         Like.query.delete()
+#         Cafe.query.delete()
+#         City.query.delete()
+#         User.query.delete()
+
+#         sf = City(**CITY_DATA)
+#         db.session.add(sf)
+
+#         user = User.register(**TEST_USER_DATA)
+#         db.session.add(user)
+
+#         cafe = Cafe(**CAFE_DATA)
+#         db.session.add(cafe)
+
+#         db.session.commit()
+
+#         self.user_id = user.id
+#         self.cafe_id = cafe.id
+
+#     def tearDown(self):
+#         """After each test, delete the cities."""
+
+#         db.session.rollback()
+
+#     def test_user_profile_no_likes(self):
+#         with app.test_client() as client:
+#             login_for_test(client, self.user_id)
+
+#             resp = client.get(f"/profile", follow_redirects=True)
+#             self.assertIn(b'have no liked cafes', resp.data)
+
+#     def test_user_profile_likes(self):
+#         like = Like(user_id=self.user_id, cafe_id=self.cafe_id)
+#         db.session.add(like)
+#         db.session.commit()
+
+#         with app.test_client() as client:
+#             login_for_test(client, self.user_id)
+
+#             resp = client.get(f"/profile", follow_redirects=True)
+#             self.assertNotIn(b'have no liked cafes', resp.data)
+#             self.assertIn(b'Test Cafe', resp.data)
+
+#     def test_api_likes(self):
+#         like = Like(user_id=self.user_id, cafe_id=self.cafe_id)
+#         db.session.add(like)
+#         db.session.commit()
+
+#         with app.test_client() as client:
+#             resp = client.get(f"/api/likes?cafe_id={self.cafe_id}")
+#             self.assertEqual(resp.json, {"error": "Not logged in"})
+
+#             login_for_test(client, self.user_id)
+
+#             resp = client.get(f"/api/likes?cafe_id={self.cafe_id}")
+#             self.assertEqual(resp.json, {"likes": True})
+
+#     def test_api_like(self):
+#         data = {"cafe_id": self.cafe_id}
+
+#         with app.test_client() as client:
+#             resp = client.post(f"/api/like", json=data)
+#             self.assertEqual(resp.json, {"error": "Not logged in"})
+
+#             login_for_test(client, self.user_id)
+
+#             resp = client.post(f"/api/like", json=data)
+#             self.assertEqual(resp.json, {"liked": self.cafe_id})
+
+#     def test_api_unlike(self):
+#         like = Like(user_id=self.user_id, cafe_id=self.cafe_id)
+#         db.session.add(like)
+#         db.session.commit()
+
+#         data = {"cafe_id": self.cafe_id}
+
+#         with app.test_client() as client:
+#             resp = client.post(f"/api/unlike", json=data)
+#             self.assertEqual(resp.json, {"error": "Not logged in"})
+
+#             login_for_test(client, self.user_id)
+
+#             resp = client.post(f"/api/unlike", json=data)
+#             self.assertEqual(resp.json, {"unliked": self.cafe_id})
