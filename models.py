@@ -183,7 +183,6 @@ class User(db.Model):
         db.session.add(user)
         return user
 
-
     @classmethod
     def authenticate(cls, username, password):
         """Find user with 'username' and 'password'"""
@@ -195,6 +194,7 @@ class User(db.Model):
 
         else:
             return False
+
 
 class Like(db.Model):
     """A user can like a cafe."""
