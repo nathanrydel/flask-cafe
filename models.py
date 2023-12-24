@@ -196,6 +196,30 @@ class User(db.Model):
         else:
             return False
 
+class Like(db.Model):
+    """A user can like a cafe."""
+
+    __tablename__ = "likes"
+
+    def __repr__(self):
+        return f"<Like user_id={self.user_id} cafe_id={self.cafe_id}>"
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id'),
+        primary_key=True,
+    )
+
+    cafe_id = db.Column(
+        db.Integer,
+        db.ForeignKey('cafes.id'),
+        primary_key=True,
+    )
+
+    user = db.relationship('User', backref='likes')
+    cafe = db.relationship('Cafe', backref='cafes')
+
+
 def connect_db(app):
     """Connect this database to provided Flask app.
 
