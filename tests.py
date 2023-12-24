@@ -19,7 +19,7 @@ app = create_app(
     SQLALCHEMY_DATABASE_URI="postgresql:///flaskcafe_test",
     SQLALCHEMY_ECHO=False,
     TESTING=True,
-    DEBUG_TB_HOSTS=['dont-show-debug-toolbar'],
+    DEBUG_TB_HOSTS=["dont-show-debug-toolbar"],
     WTF_CSRF_ENABLED=False
 )
 
@@ -36,7 +36,7 @@ def debug_html(response, label="DEBUGGING"):  # pragma: no cover
     """Prints HTML response; useful for debugging tests."""
 
     print("\n\n\n", "*********", label, "\n")
-    print(response.data.decode('utf8'))
+    print(response.data.decode("utf8"))
     print("\n\n")
 
 
@@ -123,7 +123,7 @@ class HomepageViewTestCase(TestCase):
     def test_homepage(self):
         with app.test_client() as client:
             resp = client.get("/")
-            self.assertIn(b'Where Coffee Dreams Come True', resp.data)
+            self.assertIn(b"Where Coffee Dreams Come True", resp.data)
 
 
 # class NotFoundViewTestCase(TestCase):
@@ -132,7 +132,7 @@ class HomepageViewTestCase(TestCase):
 #     def test_404(self):
 #         with app.test_client() as client:
 #             resp = client.get("/not-a-real-view-xyz")
-#             self.assertIn(b'Ut Oh', resp.data)
+#             self.assertIn(b"Ut Oh", resp.data)
 #             self.assertEqual(resp.status_code, 404)
 
 
@@ -169,7 +169,7 @@ class CityModelTestCase(TestCase):
 
     def test_city_choices(self):
         choices = City.city_choices()
-        self.assertEqual(choices, [('sf', 'San Francisco')])
+        self.assertEqual(choices, [("sf", "San Francisco")])
 
 
 #######################################
@@ -242,7 +242,7 @@ class CafeViewsTestCase(TestCase):
             resp = client.get(f"/cafes/{self.cafe_id}")
             self.assertEqual(resp.status_code, 200)
             self.assertIn(b"Test Cafe", resp.data)
-            self.assertIn(b'testcafe.com', resp.data)
+            self.assertIn(b"testcafe.com", resp.data)
 
 
 class CafeAdminViewsTestCase(TestCase):
@@ -279,39 +279,39 @@ class CafeAdminViewsTestCase(TestCase):
     def test_anon_add(self):
         with app.test_client() as client:
             resp = client.get(f"/cafes/add", follow_redirects=True)
-            self.assertIn(b'Only admins can add cafes', resp.data)
+            self.assertIn(b"Only admins can add cafes", resp.data)
 
             resp = client.post(
                 f"/cafes/add",
                 data=CAFE_DATA_EDIT,
                 follow_redirects=True)
-            self.assertIn(b'Only admins can add cafes', resp.data)
+            self.assertIn(b"Only admins can add cafes", resp.data)
 
     def test_user_add(self):
         with app.test_client() as client:
             login_for_test(client, self.user_id)
 
             resp = client.get(f"/cafes/add", follow_redirects=True)
-            self.assertIn(b'Only admins can add cafes', resp.data)
+            self.assertIn(b"Only admins can add cafes", resp.data)
 
             resp = client.post(
                 f"/cafes/add",
                 data=CAFE_DATA_EDIT,
                 follow_redirects=True)
-            self.assertIn(b'Only admins can add cafes', resp.data)
+            self.assertIn(b"Only admins can add cafes", resp.data)
 
     def test_admin_add(self):
         with app.test_client() as client:
             login_for_test(client, self.admin_id)
 
             resp = client.get(f"/cafes/add")
-            self.assertIn(b'Add Cafe', resp.data)
+            self.assertIn(b"Add Cafe", resp.data)
 
             resp = client.post(
                 f"/cafes/add",
                 data=CAFE_DATA_EDIT,
                 follow_redirects=True)
-            self.assertIn(b'added', resp.data)
+            self.assertIn(b"added", resp.data)
 
     def test_dynamic_cities_vocab(self):
         id = self.cafe_id
@@ -326,23 +326,23 @@ class CafeAdminViewsTestCase(TestCase):
             login_for_test(client, self.admin_id)
 
             resp = client.get(f"/cafes/add")
-            self.assertRegex(resp.data.decode('utf8'), choices_pattern)
+            self.assertRegex(resp.data.decode("utf8"), choices_pattern)
 
             resp = client.get(f"/cafes/{id}/edit")
-            self.assertRegex(resp.data.decode('utf8'), choices_pattern)
+            self.assertRegex(resp.data.decode("utf8"), choices_pattern)
 
     def test_anon_edit(self):
         id = self.cafe_id
 
         with app.test_client() as client:
             resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
-            self.assertIn(b'Only admins can edit cafes', resp.data)
+            self.assertIn(b"Only admins can edit cafes", resp.data)
 
             resp = client.post(
                 f"/cafes/{id}/edit",
                 data=CAFE_DATA_EDIT,
                 follow_redirects=True)
-            self.assertIn(b'Only admins can edit cafes', resp.data)
+            self.assertIn(b"Only admins can edit cafes", resp.data)
 
     def test_user_edit(self):
         id = self.cafe_id
@@ -350,13 +350,13 @@ class CafeAdminViewsTestCase(TestCase):
         with app.test_client() as client:
             login_for_test(client, self.user_id)
             resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
-            self.assertIn(b'Only admins can edit cafes', resp.data)
+            self.assertIn(b"Only admins can edit cafes", resp.data)
 
             resp = client.post(
                 f"/cafes/{id}/edit",
                 data=CAFE_DATA_EDIT,
                 follow_redirects=True)
-            self.assertIn(b'Only admins can edit cafes', resp.data)
+            self.assertIn(b"Only admins can edit cafes", resp.data)
 
     def test_admin_edit(self):
         id = self.cafe_id
@@ -364,13 +364,13 @@ class CafeAdminViewsTestCase(TestCase):
         with app.test_client() as client:
             login_for_test(client, self.admin_id)
             resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
-            self.assertIn(b'Edit Test Cafe', resp.data)
+            self.assertIn(b"Edit Test Cafe", resp.data)
 
             resp = client.post(
                 f"/cafes/{id}/edit",
                 data=CAFE_DATA_EDIT,
                 follow_redirects=True)
-            self.assertIn(b'edited', resp.data)
+            self.assertIn(b"edited", resp.data)
 
     def test_admin_edit_form_shows_curr_data(self):
         id = self.cafe_id
@@ -378,7 +378,7 @@ class CafeAdminViewsTestCase(TestCase):
         with app.test_client() as client:
             login_for_test(client, self.admin_id)
             resp = client.get(f"/cafes/{id}/edit", follow_redirects=True)
-            self.assertIn(b'Test description', resp.data)
+            self.assertIn(b"Test description", resp.data)
 
 
 #######################################
@@ -448,7 +448,7 @@ class AuthViewsTestCase(TestCase):
     def test_signup(self):
         with app.test_client() as client:
             resp = client.get("/signup")
-            self.assertIn(b'Sign Up', resp.data)
+            self.assertIn(b"Sign Up", resp.data)
 
             resp = client.post(
                 "/signup",
@@ -456,13 +456,13 @@ class AuthViewsTestCase(TestCase):
                 follow_redirects=True,
             )
 
-            self.assertIn(b"You are signed up and logged in.", resp.data)
+            self.assertIn(b"Signup successful", resp.data)
             self.assertTrue(session.get(CURR_USER_KEY))
 
     def test_signup_username_taken(self):
         with app.test_client() as client:
             resp = client.get("/signup")
-            self.assertIn(b'Sign Up', resp.data)
+            self.assertIn(b"Sign Up", resp.data)
 
             # signup with same data as the already-added user
             resp = client.post(
@@ -476,7 +476,7 @@ class AuthViewsTestCase(TestCase):
     def test_login(self):
         with app.test_client() as client:
             resp = client.get("/login")
-            self.assertIn(b'Welcome Back!', resp.data)
+            self.assertIn(b"Welcome Back!", resp.data)
 
             resp = client.post(
                 "/login",
@@ -484,7 +484,7 @@ class AuthViewsTestCase(TestCase):
                 follow_redirects=True,
             )
 
-            self.assertIn(b"Invalid credentials", resp.data)
+            self.assertIn(b"Invalid username or password", resp.data)
 
             resp = client.post(
                 "/login",
@@ -492,7 +492,7 @@ class AuthViewsTestCase(TestCase):
                 follow_redirects=True,
             )
 
-            self.assertIn(b"Hello, test", resp.data)
+            self.assertIn(b"test logged in", resp.data)
             self.assertEqual(session.get(CURR_USER_KEY), self.user_id)
 
     def test_logout(self):
@@ -527,19 +527,19 @@ class NavBarTestCase(TestCase):
     def test_anon_navbar(self):
         with app.test_client() as client:
             resp = client.get("/cafes")
-            self.assertIn(b'Log In', resp.data)
-            self.assertIn(b'Sign Up', resp.data)
-            self.assertNotIn(b'/profile', resp.data)
-            self.assertNotIn(b'Log Out', resp.data)
+            self.assertIn(b"Log In", resp.data)
+            self.assertIn(b"Sign Up", resp.data)
+            self.assertNotIn(b"/profile", resp.data)
+            self.assertNotIn(b"Log Out", resp.data)
 
     def test_logged_in_navbar(self):
         with app.test_client() as client:
             login_for_test(client, self.user_id)
             resp = client.get("/cafes")
-            self.assertNotIn(b'Log In', resp.data)
-            self.assertNotIn(b'Sign Up', resp.data)
-            self.assertIn(b'/profile', resp.data)
-            self.assertIn(b'Log Out', resp.data)
+            self.assertNotIn(b"Log In", resp.data)
+            self.assertNotIn(b"Sign Up", resp.data)
+            self.assertIn(b"/profile", resp.data)
+            self.assertIn(b"Log Out", resp.data)
 
 
 class ProfileViewsTestCase(TestCase):
@@ -565,37 +565,37 @@ class ProfileViewsTestCase(TestCase):
     def test_anon_profile(self):
         with app.test_client() as client:
             resp = client.get("/profile", follow_redirects=True)
-            self.assertIn(b'not logged in', resp.data)
+            self.assertIn(b"not logged in", resp.data)
 
     def test_logged_in_profile(self):
         with app.test_client() as client:
             login_for_test(client, self.user_id)
             resp = client.get("/profile")
-            self.assertIn(b'/profile/edit', resp.data)
+            self.assertIn(b"/profile/edit", resp.data)
 
     def test_anon_profile_edit(self):
         with app.test_client() as client:
             resp = client.get("/profile/edit", follow_redirects=True)
-            self.assertIn(b'not logged in', resp.data)
+            self.assertIn(b"not logged in", resp.data)
 
             resp = client.post("/profile/edit", follow_redirects=True)
-            self.assertIn(b'not logged in.', resp.data)
+            self.assertIn(b"not logged in.", resp.data)
 
     def test_logged_in_profile_edit(self):
         with app.test_client() as client:
             login_for_test(client, self.user_id)
             resp = client.get("/profile/edit")
-            self.assertIn(b'Edit Profile', resp.data)
+            self.assertIn(b"Edit Profile", resp.data)
 
             resp = client.post(
                 "/profile/edit",
                 data=TEST_USER_DATA_EDIT,
                 follow_redirects=True)
 
-            self.assertIn(b'new-fn new-ln', resp.data)
-            self.assertIn(b'new-description', resp.data)
-            self.assertIn(b'new-email', resp.data)
-            self.assertIn(b'new-image', resp.data)
+            self.assertIn(b"new-fn new-ln", resp.data)
+            self.assertIn(b"new-description", resp.data)
+            self.assertIn(b"new-email", resp.data)
+            self.assertIn(b"new-image", resp.data)
 
 
 #######################################
@@ -641,7 +641,7 @@ class LikeViewsTestCase(TestCase):
             login_for_test(client, self.user_id)
 
             resp = client.get(f"/profile", follow_redirects=True)
-            self.assertIn(b'have no liked cafes', resp.data)
+            self.assertIn(b"have no liked cafes", resp.data)
 
     def test_user_profile_likes(self):
         like = Like(user_id=self.user_id, cafe_id=self.cafe_id)
@@ -652,8 +652,8 @@ class LikeViewsTestCase(TestCase):
             login_for_test(client, self.user_id)
 
             resp = client.get(f"/profile", follow_redirects=True)
-            self.assertNotIn(b'have no liked cafes', resp.data)
-            self.assertIn(b'Test Cafe', resp.data)
+            self.assertNotIn(b"have no liked cafes", resp.data)
+            self.assertIn(b"Test Cafe", resp.data)
 
     def test_api_likes(self):
         like = Like(user_id=self.user_id, cafe_id=self.cafe_id)
