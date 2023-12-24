@@ -55,7 +55,7 @@ def cafe_detail(cafe_id):
 def cafe_add():
     """Show add form / handle adding of cafe"""
 
-    if not g.user and g.user.admin:
+    if not g.user or not g.user.admin:
         flash("Only admins can add cafes.", "danger")
         return redirect("/login")
 
@@ -86,7 +86,7 @@ def cafe_add():
 def cafe_edit(cafe_id):
     """Show edit form / handle editing of cafe"""
 
-    if not g.user and g.user.admin:
+    if not g.user or not g.user.admin:
         flash("Only admins can edit cafes.", "danger")
         return redirect("/login")
 
