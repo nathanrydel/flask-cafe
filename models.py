@@ -81,6 +81,12 @@ class Cafe(db.Model):
 
     city = db.relationship("City", backref="cafes")
 
+    liking_users = db.relationship(
+        'User',
+        secondary='likes',
+        backref='liked_cafes'
+    )
+
     def __repr__(self):
         return f"<Cafe id={self.id} name='{self.name}'>"
 
