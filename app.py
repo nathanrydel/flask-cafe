@@ -22,7 +22,7 @@ def create_app(**config):
             "DATABASE_URL", 'postgresql:///flask_cafe'),
         SQLALCHEMY_ECHO=True,
         SECRET_KEY= os.environ.get("FLASK_SECRET_KEY", "shhhh"),
-        # DEBUG_TB_INTERCEPT_REDIRECTS=True,
+        DEBUG_TB_INTERCEPT_REDIRECTS=False,
     )
     app.config.update(config)
 
